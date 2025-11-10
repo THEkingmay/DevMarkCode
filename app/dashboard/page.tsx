@@ -2,22 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "react-toastify"
-
-interface Post {
-  id: string,
-  title: string,
-  tags: string[]
-}
-
-const MOCK_DATA: Post[] = [
-  { id: "dsids1", title: "การใช้งาน React Hooks ในโปรเจกต์จริง", tags: ['react', 'hooks', 'frontend'] },
-  { id: "dsids2", title: "เปรียบเทียบ Next.js และ Remix", tags: ['nextjs', 'remix', 'ssr'] },
-  { id: "dsids3", title: "เริ่มต้นกับ Supabase Database", tags: ['supabase', 'database', 'backend'] },
-  { id: "dsids4", title: "เทคนิคการใช้ Tailwind CSS ให้คล่อง", tags: ['css', 'tailwind', 'design'] },
-  { id: "dsids5", title: "สร้าง Realtime Chat ด้วย Socket.io", tags: ['websocket', 'nodejs', 'chat'] },
-  { id: "dsids6", title: "ESP32 กับการเชื่อมต่อ Firebase", tags: ['iot', 'esp32', 'firebase'] },
-  
-]
+import Link from "next/link"
+import { PostTitle } from "@/type/type"
 
 
 function PostCardSkeleton() {
@@ -33,11 +19,12 @@ function PostCardSkeleton() {
   )
 }
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post }: { post: PostTitle }) {
   return (
+    <Link href={`/dashboard/${post.id}`}>
     <div className="bg-white border border-gray-200 rounded-xl shadow-lg 
-                    overflow-hidden transition-all duration-300 
-                    hover:shadow-xl hover:-translate-y-1">
+                  overflow-hidden transition-all duration-300 
+                  hover:shadow-xl hover:-translate-y-1">
       <div className="p-5">
         <h3 className="text-lg font-semibold text-gray-900 mb-3 truncate" title={post.title}>
           {post.title}
@@ -52,23 +39,54 @@ function PostCard({ post }: { post: Post }) {
             </span>
           ))}
         </div>
+        <div className="text-sm pt-1 text-gray-400 text-end">
+          {new Date(post.create_at).toLocaleDateString()}
+        </div>
       </div>
     </div>
+    </Link>
   )
 }
 
 
 export default function DashboardPage() {
-  const [posts, setPosts] = useState<Post[]>([]) 
+  const [posts, setPosts] = useState<PostTitle[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const get50Post = async (time: string) => {
-    // time คือตัวแปร timestampz 
-    //  ไปเรียก API โดยส่ง Timestampzเข้าไป ตามอัลกอรีทึมที่วางไว้ตอนแรก
+  const [stackPreviosStart, setStack] = useState<string[]>([])
+  
+  const [hasNextPage, setHasNextPage] = useState(true) 
+  const PAGE_SIZE = 9 
+
+  const handlePrevousAndNext = (isNext: boolean) => {
+    if (!isNext && stackPreviosStart.length === 0) {
+      toast.info("นี่คือหน้าแรกแล้ว")
+      return
+    }
+
+    if (isNext) {
+      setStack(prev => [...prev, posts[0].create_at])
+      get9Post(posts[posts.length - 1].create_at , true)
+    } else {
+      const prevCursor = stackPreviosStart[stackPreviosStart.length - 1]
+      get9Post(prevCursor , false)
+      setStack(prev => prev.slice(0, -1));
+    }
+  }
+
+  const get9Post = async (cursorTime: string | null , isNext :boolean) => {
+    
+    setIsLoading(true)
+    
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setPosts(MOCK_DATA)
+      
+       const res = await fetch(`http://localhost:3000/api/posts/getPagePosts?time=${cursorTime}&&isNext=${isNext}`)
+      const fetchedPosts : PostTitle[]= (await res.json()).data
+      setPosts(fetchedPosts)
+
+      setHasNextPage(fetchedPosts.length === PAGE_SIZE)
+
     } catch (err) {
       console.log((err as Error).message)
       toast.error('เกิดข้อผิดพลาดในการดึงรายการ')
@@ -77,21 +95,18 @@ export default function DashboardPage() {
     }
   }
 
-  // FIX 3: แก้ typo ชื่อฟังก์ชัน
   const handleSearch = async () => {
-    // ฟังชันนี้จะเรียก API ไป คิวรีตาม titile
-    // หรือ tag ได้ 
     console.log("Searching for:", searchQuery)
   }
 
   useEffect(() => {
-    get50Post(new Date().toISOString()) // เอาเวลา timestampz ปัจจบัน
+    get9Post(new Date().toISOString() , true)  // เข้ามาครั้งแรกให้คิวรีจากวันปัจจุบันเลย
+
   }, [])
 
   return (
-    <div className="container p-5 max-w-7xl mx-auto">
-
-      <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 pb-4 border-b">
+    <div className="container px-5 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 pb-4 border-b">
         <h1 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">
           Dashboard
         </h1>
@@ -121,16 +136,38 @@ export default function DashboardPage() {
 
 
       {!isLoading && posts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((p) => (
-            <PostCard key={p.id} post={p} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {posts.map((p) => (
+              <PostCard key={p.id} post={p} />
+            ))}
+          </div>
+
+          <div className="flex justify-between mt-5">
+            <button 
+              onClick={() => handlePrevousAndNext(false)}
+              disabled={stackPreviosStart.length === 0}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button 
+              onClick={() => handlePrevousAndNext(true)}
+              disabled={!hasNextPage}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg 
+                         hover:bg-blue-600
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </>
       )}
 
       {!isLoading && posts.length === 0 && (
-        <div className="text-center text-gray-500 mt-10 p-10 
-                          border-2 border-dashed border-gray-300 rounded-lg">
+         <div className="text-center text-gray-500 mt-10 p-10 
+                           border-2 border-dashed border-gray-300 rounded-lg">
           <p className="text-lg font-semibold">
             {searchQuery ? `ไม่พบผลลัพธ์สำหรับ "${searchQuery}"` : "ยังไม่มีโพสต์"}
           </p>

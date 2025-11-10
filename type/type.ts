@@ -1,9 +1,15 @@
 type User =  {
-  id: string;
+  uid: string;
   email : string , 
   name : string , 
   image : string ,
   create_at : string
 }
 
-export type {User}
+interface PostTitle {
+  id: string,
+  title: string,
+  tags: string[] , 
+  create_at : string
+}
+export type {User , PostTitle}

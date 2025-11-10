@@ -18,18 +18,19 @@ export const authOptions: AuthOptions = {
         if (account.provider === "github") {
 
           const { data, error } = await supabase
-            .from("Members")
-            .select("id")
-            .eq("id", user.id)
+            .from("users")
+            .select("uid")
+            .eq("uid", user.id)
             .single(); 
 
-          if (!data) {
-            const { error: insertError } = await supabase.from("Members").insert({
-              id: user.id,
+          if(data){console.log("User founded")}
+         else if (!data) {
+            const { error: insertError } = await supabase.from("users").insert({
+              uid: user.id,
               name: user?.name,
               image: user?.image,
               email: user?.email,
-            });
+            })
             
             if (insertError) {
               console.error("Supabase insert error:", insertError.message);
@@ -39,7 +40,7 @@ export const authOptions: AuthOptions = {
           } else if (error) {
             console.error("Supabase select error:", (error as Error).message);
           }
-          token.id = user.id;
+          token.uid = user.id;
         }
       }
       return token;
@@ -47,7 +48,8 @@ export const authOptions: AuthOptions = {
 
     async session({ session, token }) {
       // console.log("session " , session)
-      (session.user as User).id = token.id as string;
+      (session.user as User).uid = token.uid as string;
+      // console.log(session)
       return session;
     },
   },
