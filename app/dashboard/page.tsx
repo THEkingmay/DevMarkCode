@@ -92,7 +92,7 @@ export default function DashboardPage() {
       }
 
       const res = await fetch(
-        `http://localhost:3000/api/posts/getPagePosts?${params.toString()}`
+        `/api/posts/getPagePosts?${params.toString()}`
       );
 
       if (!res.ok) {
