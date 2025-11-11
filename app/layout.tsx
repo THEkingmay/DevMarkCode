@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import SessionProviderPage from "./SessionProvider";
+import type { Metadata } from 'next';
+import './globals.css';
+import SessionProviderPage from './SessionProvider';
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS 
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS
 
 export const metadata: Metadata = {
-  title: "DevMarkCode",
-  description: "For Learning how to code.",
+  title: 'DevMarkCode',
+  description: 'For Learning how to code.',
 };
 
 export default function RootLayout({
@@ -16,8 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-      >
+      <body>
         <SessionProviderPage>
           {children}
 
@@ -32,8 +31,7 @@ export default function RootLayout({
             draggable
             pauseOnHover
             theme="light" // หรือ "dark" หรือ "colored"
-         />
-
+          />
         </SessionProviderPage>
       </body>
     </html>

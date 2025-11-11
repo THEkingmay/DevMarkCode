@@ -30,3 +30,9 @@ create table if not exists codes_in_post (
   description text,
   created_at timestamptz default now()
 );
+
+-- link ในโพสต์ many to many
+create table if not exists links_in_post(
+  post_id bigint not null references posts(id) on delete cascade,
+  link text not null
+)

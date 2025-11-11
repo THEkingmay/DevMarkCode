@@ -1,7 +1,7 @@
-import NextAuth, { AuthOptions } from "next-auth";
-import GithubProvider from "next-auth/providers/github";
-import { supabase } from "@/lib/supabase";
-import type { User } from "@/type/type";
+import NextAuth, { AuthOptions } from 'next-auth';
+import GithubProvider from 'next-auth/providers/github';
+import { supabase } from '@/lib/supabase';
+import type { User } from '@/util/type/type';
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -15,30 +15,30 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user, account }) {
       if (account && user) {
-        if (account.provider === "github") {
-
+        if (account.provider === 'github') {
           const { data, error } = await supabase
-            .from("users")
-            .select("uid")
-            .eq("uid", user.id)
-            .single(); 
+            .from('users')
+            .select('uid')
+            .eq('uid', user.id)
+            .single();
 
-          if(data){console.log("User founded")}
-         else if (!data) {
-            const { error: insertError } = await supabase.from("users").insert({
+          if (data) {
+            console.log('User founded');
+          } else if (!data) {
+            const { error: insertError } = await supabase.from('users').insert({
               uid: user.id,
               name: user?.name,
               image: user?.image,
               email: user?.email,
-            })
-            
+            });
+
             if (insertError) {
-              console.error("Supabase insert error:", insertError.message);
-            }else{
-                console.log("Insert new  User success")
+              console.error('Supabase insert error:', insertError.message);
+            } else {
+              console.log('Insert new  User success');
             }
           } else if (error) {
-            console.error("Supabase select error:", (error as Error).message);
+            console.error('Supabase select error:', (error as Error).message);
           }
           token.uid = user.id;
         }
@@ -49,13 +49,12 @@ export const authOptions: AuthOptions = {
     async session({ session, token }) {
       // console.log("session " , session)
       (session.user as User).uid = token.uid as string;
-      // console.log(session)
       return session;
     },
   },
 
   pages: {
-    signIn: "/",
+    signIn: '/',
   },
 };
 

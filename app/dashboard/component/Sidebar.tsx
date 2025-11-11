@@ -1,27 +1,28 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react' // 1. Import signOut
-import { 
-  Home,     // 2. เปลี่ยนไอคอนเป็น lucide-react
-  Plus, 
-  X, 
-  LogOut    // 3. Import ไอคอน Logout
-} from 'lucide-react'
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react'; // 1. Import signOut
+import {
+  Home, // 2. เปลี่ยนไอคอนเป็น lucide-react
+  Plus,
+  LogOut, // 3. Import ไอคอน Logout
+} from 'lucide-react';
 
 // 4. อัปเดต navigation array ให้ใช้ไอคอนใหม่
 const navigation = [
   { name: 'โพสต์ทั้งหมด', href: '/dashboard', icon: Home },
   { name: 'เพิ่มโพสต์ใหม่', href: '/dashboard/add', icon: Plus },
-]
+];
 
 export default function Sidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const getLinkClassName = (href: string) => {
-    const isActive = (href === '/dashboard' && pathname === href) || (href !== '/dashboard' && pathname.startsWith(href));
-    
+    const isActive =
+      (href === '/dashboard' && pathname === href) ||
+      (href !== '/dashboard' && pathname.startsWith(href));
+
     return `
       flex items-center px-4 py-2 mb-1 rounded-lg transition-colors duration-200
       ${
@@ -29,12 +30,11 @@ export default function Sidebar() {
           ? 'bg-gray-900 text-white'
           : 'text-gray-300 hover:bg-gray-700 hover:text-white'
       }
-    `
-  }
+    `;
+  };
 
   return (
     <>
-
       <aside
         className={`
           hidden md:flex
@@ -68,11 +68,11 @@ export default function Sidebar() {
               text-gray-300 hover:bg-gray-900 hover:text-white
             "
           >
-            ออกจากระบบ<LogOut className="h-5 w-5 mr-3 ms-1" />
+            ออกจากระบบ
+            <LogOut className="h-5 w-5 mr-3 ms-1" />
           </button>
         </div>
-        
       </aside>
     </>
-  )
+  );
 }
