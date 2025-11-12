@@ -5,7 +5,6 @@ import Navbar from '@/components/Navbar';
 import Sidebar from './component/Sidebar';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">

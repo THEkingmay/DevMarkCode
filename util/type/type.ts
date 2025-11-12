@@ -19,6 +19,16 @@ interface Code {
   language: string;
 }
 
+interface CodeStructure extends Code {
+    id : string,
+}
+
+interface Link {
+  id : string,
+  link : string , 
+}
+
+
 interface PostForm {
   title: string;
   description: string | null;
@@ -32,4 +42,20 @@ interface Tag {
   description: string;
 }
 
-export type { User, PostTitle, PostForm, Code, Tag };
+interface TagStructure extends Tag {
+  created_at : string
+}
+
+
+interface PostStructure{
+  post_id : string , 
+  uid : string ,
+  title : string , 
+  description : string , 
+  created_at : string ,
+  tags : TagStructure[] , // [ {id , description  , creacted_at} ,...]
+  links : Link[] ,  // [ { id , link } , ...]
+  codes : CodeStructure[] , // [ { id , code , descriton , language , description }, .. ]
+}
+
+export type { User, PostTitle, PostForm, Code, Tag , PostStructure };

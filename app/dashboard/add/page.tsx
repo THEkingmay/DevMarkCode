@@ -57,7 +57,32 @@ const FormTextArea = ({ label, ...props }: FormTextAreaProps) => (
   </div>
 );
 
+
+
 export default function AddPost() {
+  
+const popularLanguages = [
+  { value: '', label: '--- เลือกภาษา ---' },
+  { value: 'plaintext', label: 'Plain Text' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'python', label: 'Python' },
+  { value: 'jsx', label: 'React (JSX)' },
+  { value: 'tsx', label: 'React (TSX)' },
+  { value: 'html', label: 'HTML' },
+  { value: 'css', label: 'CSS' },
+  { value: 'scss', label: 'SCSS' },
+  { value: 'json', label: 'JSON' },
+  { value: 'sql', label: 'SQL' },
+  { value: 'java', label: 'Java' },
+  { value: 'csharp', label: 'C#' },
+  { value: 'go', label: 'Go' },
+  { value: 'php', label: 'PHP' },
+  { value: 'bash', label: 'Bash (Shell)' },
+  { value: 'markdown', label: 'Markdown' },
+  { value: 'yaml', label: 'YAML' },
+];
+
   const [selectableTags, setTags] = useState<Tag[]>([]);
   const [loadTags, setLoadTags] = useState<boolean>(true);
 
@@ -270,14 +295,30 @@ export default function AddPost() {
             <div
               className={`p-4 space-y-4 ${isHideCodeForm ? 'hidden' : 'block'}`}
             >
-              <FormInput
-                label="ภาษา"
-                value={newCode.language}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setNewCode((c) => ({ ...c, language: e.target.value }))
-                }
-                placeholder="เช่น typescript, python, css"
-              />
+              <div>
+                <label
+                  htmlFor="language-select"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  ภาษา
+                </label>
+                <select
+                  id="language-select"
+                  value={newCode.language}
+                  // สังเกตว่า Type ของ Event เปลี่ยนเป็น HTMLSelectElement
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setNewCode((c) => ({ ...c, language: e.target.value }))
+                  }
+                  // นี่คือคลาส Tailwind สำหรับจัดสไตล์ <select> ให้คล้าย <input>
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  {popularLanguages.map((lang) => (
+                    <option key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <FormTextArea
                 label="โค้ด"
                 value={newCode.code}
