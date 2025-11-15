@@ -2,8 +2,9 @@
 
 import { useParams } from 'next/navigation';
 import { Fragment, useEffect, useState } from 'react';
-import { PostStructure } from '@/util/type/type'; // (ใช้ Type เดิมของคุณ)
+import {  PostStructure} from '@/util/type/type'; // (ใช้ Type เดิมของคุณ)
 import { toast } from 'react-toastify';
+import UpdateFormContent from './updateModal';
 
 // --- Imports สำหรับ UI ---
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -17,9 +18,10 @@ import {
 } from '@heroicons/react/24/outline';
 
 import { Dialog, Transition } from '@headlessui/react';
-
+import { useRouter } from 'next/navigation';
 // --- Component หลัก ---
 export default function SelectPost() {
+  const router = useRouter()
   const [post, setPost] = useState<PostStructure>({
     post_id: '',
     uid: '',
@@ -34,10 +36,13 @@ export default function SelectPost() {
 
   // --- State สำหรับ Modal และ UI ---
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editingField, setEditingField] = useState<{field : string , targetId : string | number | null} | null>(null);
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [isLoadAndUpdate , setIsLoading] = useState<boolean>(false)
+
+  const [fetchError , setFetchError] = useState<string>('')
 
   // --- ส่วน Logic การดึงข้อมูล (โค้ดเดิมของคุณ) ---
   const getPostById = async (post_id: string) => {
@@ -50,6 +55,7 @@ export default function SelectPost() {
     } catch (err) {
       console.log((err as Error).message);
       toast.error((err as Error).message);
+      setFetchError((err as Error).message)
     }
   };
 
@@ -59,40 +65,52 @@ export default function SelectPost() {
     }
   }, [postId]); // (เปลี่ยนเป็น [postId] เพื่อให้ re-fetch เมื่อ ID เปลี่ยน)
 
-  // --- Logic สำหรับ UI ---
 
-  // 1. เปิด Modal
-  const openModal = (field: string) => {
-    setEditingField(field);
-    setIsModalOpen(true);
-  };
+  // --- 1. สร้างฟังก์ชัน Callback เมื่ออัปเดตสำเร็จ ---
+    // เราจะส่งฟังก์ชันนี้เข้าไปในฟอร์ม เพื่อให้ฟอร์มเรียกใช้เมื่อทำงานเสร็จ
+    const onUpdateComplete = (successMessage: string) => {
+        toast.success(successMessage);
+        closeModal();
+        getPostById(postId); // Re-fetch ข้อมูลใหม่
+    };
 
-  // 2. ปิด Modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingField(null);
-  };
+    // --- 2. ปรับปรุง Logic การเปิด/ปิด Modal ---
+    const openModal = (field: string, targetId: string | number | null) => {
+        setEditingField({ field, targetId });
+        setIsLoading(false); // Reset loading state
+        setIsModalOpen(true);
+    };
 
-  const handleUpdate = () => {
-    //
-    // *** ที่นี่คือส่วนที่คุณจะเขียน Logic การยิง API เพื่ออัปเดตข้อมูล ***
-    //
-    console.log('กำลังอัปเดต field:', editingField);
-    toast.success('อัปเดตข้อมูลสำเร็จ! กำลังรีโหลด...');
-    // ปิด Modal และ Reload ข้อมูล
-    closeModal();
-    getPostById(postId);
-  };
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditingField(null);
+    };
 
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
+    try {
+        setIsLoading(true);
+        const res = await fetch(`/api/posts/delete?postId=${postId}`, {
+            method: "POST",
+          });
 
-    console.log('กำลังลบโพสต์ ID:', post.post_id);
-    toast.warn('ฟังก์ชันลบยังไม่ได้เชื่อมต่อ API');
+          if (!res.ok) {
+              const data = await res.json(); 
+              throw new Error(data.message || "Something went wrong"); 
+          }
 
-    setIsDeleteModalOpen(false);
+          // ถ้าลบสำเร็จ
+          router.push('/dashboard');
+          setIsDeleteModalOpen(false); 
+          toast.success("Post deleted successfully!"); 
 
-  };
+        } catch (err) {
+            console.error((err as Error).message); 
+            toast.error((err as Error).message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
   // 5. ปุ่มคัดลอกโค้ด
   const handleCopyCode = (codeToCopy: string, index: number) => {
@@ -104,8 +122,14 @@ export default function SelectPost() {
 
   if (!post.post_id) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p>Loading post...</p>
+      <div className="flex justify-center items-center min-h-screen text-2xl">
+       {!fetchError &&  <p>Loading post...</p>}
+       {fetchError &&  (
+        <div>
+          เกิดข้อผิดพลาด
+          {fetchError}
+        </div>
+       )}
       </div>
     );
   }
@@ -120,7 +144,7 @@ export default function SelectPost() {
               {post.title}
             </h1>
             <button
-              onClick={() => openModal('title')}
+              onClick={() => openModal('title'  , null)}
               className="text-gray-500 hover:text-blue-600 transition-colors"
             >
               <PencilSquareIcon className="w-6 h-6" />
@@ -138,7 +162,7 @@ export default function SelectPost() {
         <div className="flex items-center gap-3 mb-2">
           <h2 className="text-2xl font-semibold">คำอธิบาย</h2>
           <button
-            onClick={() => openModal('description')}
+            onClick={() => openModal('description' , null)}
             className="text-gray-500 hover:text-blue-600 transition-colors"
           >
             <PencilSquareIcon className="w-5 h-5" />
@@ -152,7 +176,7 @@ export default function SelectPost() {
         <div className="flex items-center gap-3 mb-2">
           <h2 className="text-2xl font-semibold">แท็ก</h2>
           <button
-            onClick={() => openModal('tags')}
+            onClick={() => openModal('tags', null)}
             className="text-gray-500 hover:text-blue-600 transition-colors"
           >
             <PencilSquareIcon className="w-5 h-5" />
@@ -175,23 +199,29 @@ export default function SelectPost() {
         <div className="flex items-center gap-3 mb-2">
           <h2 className="text-2xl font-semibold">ลิงก์อ้างอิง</h2>
           <button
-            onClick={() => openModal('links')}
+            onClick={() => openModal('links' , null)}
             className="text-gray-500 hover:text-blue-600 transition-colors"
           >
-            <PencilSquareIcon className="w-5 h-5" />
+            <PlusCircleIcon className="w-5 h-5" />
           </button>
         </div>
         <ul className="list-disc list-inside space-y-1">
           {post.links.map((link, index) => (
-            <li key={index}>
+            <li key={index} className='flex items-center'>
               <a
                 href={link.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all"
+                className="text-blue-600 hover:underline break-all me-3"
               >
                 {link.link}
               </a>
+              <button
+                    onClick={() => openModal(`links` , link.id)} // ส่ง index ไปด้วย
+                    className="text-gray-500 hover:text-blue-600 transition-colors"
+                  >
+              <PencilSquareIcon className="w-5 h-5" />
+            </button>
             </li>
           ))}
         </ul>
@@ -202,10 +232,10 @@ export default function SelectPost() {
       <div className='flex items-center'>
           <h2 className="text-2xl font-semibold mb-2 me-2">ตัวอย่างโค้ด</h2> 
           <button
-            onClick={() => openModal('Add Code')}
+            onClick={() => openModal('codes' , null)}
             className="text-gray-500 hover:text-blue-600 transition-colors"
           >
-            <PlusCircleIcon className="w-7 h-7" />
+            <PlusCircleIcon className="w-5 h-5" />
           </button>
       </div>
         <div className="space-y-6">
@@ -216,10 +246,10 @@ export default function SelectPost() {
             >
               {/* ส่วนหัวของ Code Block (คำอธิบาย + ปุ่มแก้ไข/คัดลอก) */}
               <div className="flex justify-between items-center bg-gray-100 p-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-3/4">
                   <p className="font-medium">{codeBlock.description}</p>
                   <button
-                    onClick={() => openModal(`code-${index}`)} // ส่ง index ไปด้วย
+                    onClick={() => openModal(`codes` , codeBlock.id)} // ส่ง index ไปด้วย
                     className="text-gray-500 hover:text-blue-600 transition-colors"
                   >
                     <PencilSquareIcon className="w-5 h-5" />
@@ -248,78 +278,63 @@ export default function SelectPost() {
         </div>
       </section>
 
-      <Transition appear show={isModalOpen} as={Fragment}>
-        <Dialog as="div" className=" z-50" onClose={closeModal}>
-          
-        <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-30"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-30"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0" /> 
-          </Transition.Child>
 
-          {/* ส่วนที่ 2: ตัว Modal (Panel) */}
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95" // <-- Start (เล็กและจาง)
-                enterTo="opacity-100 scale-100"   // <-- End (ปกติ)
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100" // <-- Start (ปกติ)
-                leaveTo="opacity-0 scale-95"   // <-- End (เล็กและจาง)
-              >
-                <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all">
-                  
+        {/* === Modal สำหรับแก้ไข === */}
+            <Transition appear show={isModalOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-50" onClose={closeModal}>
+                    {/* Backdrop */}
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-300"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100" // ทำให้พื้นหลังทึบขึ้นเล็กน้อย
+                        leave="ease-in duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                    >
+                        <div className="fixed inset-0  bg-opacity-30" />
+                    </Transition.Child>
 
-                  <Dialog.Title
-                    as="h3"
-                    className="text-xl font-semibold leading-6 text-gray-900 mb-4"
-                  >
-                    แก้ไขข้อมูล (Field: {editingField})
-                  </Dialog.Title>
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4 text-center">
+                            <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0 scale-95"
+                                enterTo="opacity-100 scale-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100 scale-100"
+                                leaveTo="opacity-0 scale-95"
+                            >
+                                <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                    <Dialog.Title
+                                        as="h3"
+                                        className="text-xl font-semibold leading-6 text-gray-900 mb-4"
+                                    >
+                                        แก้ไขข้อมูล {editingField?.field}
+                                        {editingField?.targetId ? ` (ID: ${editingField.targetId})` : ''}
+                                    </Dialog.Title>
 
-                  {/* ส่วนฟอร์ม (เหมือนเดิม) */}
-                  <div className="mt-2">
-                    <div className="bg-gray-100 p-4 rounded min-h-[200px]">
-                      <p className="text-gray-600">
-                        (นี่คือพื้นที่สำหรับฟอร์มแก้ไข {editingField})
-                      </p>
-                      <p>คุณจะต้องเขียน Logic การแก้ไขในส่วนนี้...</p>
+                                    <div className="mt-2">
+                                        <div className="bg-gray-50 p-4 rounded min-h-[100px] max-h-[60vh] overflow-y-auto">
+                                            {editingField && (
+                                                <UpdateFormContent
+                                                    field={editingField.field}
+                                                    targetId={editingField.targetId}
+                                                    post={post} // ส่งข้อมูล post ปัจจุบันไป
+                                                    onComplete={onUpdateComplete} // ส่ง callback ไป
+                                                    onCancel={closeModal} // ส่ง callback ปิด
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
                     </div>
-                  </div>
-
-                  {/* ปุ่มควบคุม (เหมือนเดิม) */}
-                  <div className="flex justify-end gap-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={closeModal}
-                      className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-                    >
-                      ยกเลิก
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleUpdate}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      ยืนยันการแก้ไข
-                    </button>
-                  </div>
-
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
-
+                </Dialog>
+            </Transition>
+          {/* delete zone */}
       <button
             onClick={() => setIsDeleteModalOpen(true)} 
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex-shrink-0"
@@ -327,6 +342,7 @@ export default function SelectPost() {
             <TrashIcon className="w-5 h-5" />
             <span className="hidden md:inline">ลบโพสต์</span>
        </button>
+
        <Transition appear show={isDeleteModalOpen} as={Fragment}>
         <Dialog as="div" className=" z-50" onClose={() => setIsDeleteModalOpen(false)}>
           
@@ -377,12 +393,14 @@ export default function SelectPost() {
 
                   {/* ปุ่มควบคุม (ยืนยัน / ยกเลิก) */}
                   <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+
                     <button
+                    disabled={isLoadAndUpdate}
                       type="button"
                       className="inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm"
                       onClick={handleConfirmDelete} // <-- เรียกฟังก์ชันลบจริง
                     >
-                      ยืนยันการลบ
+                      {isLoadAndUpdate? ' กำลังลบ... ' : 'ยืนยันการลบ'}
                     </button>
                     <button
                       type="button"
@@ -402,3 +420,5 @@ export default function SelectPost() {
     </div>
   );
 }
+
+

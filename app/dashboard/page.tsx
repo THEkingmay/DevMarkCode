@@ -55,7 +55,6 @@ function PostCard({ post }: { post: PostTitle }) {
 export default function DashboardPage() {
   const [posts, setPosts] = useState<PostTitle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const PAGE_SIZE = 9;
@@ -137,12 +136,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSearch = async () => {
-    console.log('Searching for:', searchQuery);
-    // เพิ่มเติม: ควรจะเรียก get9Post หรือ API ค้นหาใหม่ที่นี่
-    // และรีเซ็ต page เป็น 1
-  };
-
   useEffect(() => {
     get9Post(null, null, true);
   }, []);
@@ -153,21 +146,12 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">
           Dashboard
         </h1>
-        <div className="">
-          <input
-            type="text"
-            placeholder="ค้นหา (Title หรือ Tag)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border border-gray-300 rounded-lg py-2 px-4 w-full md:w-80
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 me-3"
-          />
-          <button
-            onClick={handleSearch}
+        <div >
+          {/* <button
             className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 mt-2 md:mt-0"
           >
-            ค้นหา
-          </button>
+            ค้นหาด้วยข้อความและหมวดหมู่
+          </button> */}
         </div>
       </div>
 
@@ -215,16 +199,9 @@ export default function DashboardPage() {
                      border-2 border-dashed border-gray-300 rounded-lg"
         >
           <p className="text-lg font-semibold">
-            {searchQuery
-              ? `ไม่พบผลลัพธ์สำหรับ "${searchQuery}"`
-              : 'ยังไม่มีโพสต์'}
+            ยังไม่มีโพสต์
           </p>
-          <p className="text-sm">
-            {searchQuery
-              ? 'ลองค้นหาด้วยคำอื่น'
-              : 'เมื่อมีโพสต์ใหม่จะแสดงที่นี่'}
-          </p>
-        </div>
+            </div>
       )}
     </div>
   );

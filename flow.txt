@@ -1,0 +1,85 @@
+
+  function formUpdate (){
+    const [updateObject , setUpdateOBJ] = useState<{
+        postId : string | number,
+        field  : 'title' | 'description'| 'links'| 'codes'| 'tags' ,// บอกว่าจะอับเดตหรือลบฟิลด์ไหน
+       targetId : string | number | null , 
+       newData : null | string | Code | Tag // tag จะมีไอดีกับสตริง ถ้าไอดีเป็น null ไปจัดการต่อฝั่งAPI
+    }>()
+    const handleUpdate = async() =>{
+      // ถ้าแก้ไข Title Description แก้ไขได้ง่าย
+    }
+    const handleDelete  = async ()=>{
+      // ลบ title , description ไม่ได้
+      // ถ้าลบ code , tag , link ทำได้ จะมี postId ในตาราง post_tags  , links_in_post , code_in_post 
+      // 1.ตรวจสอบว่า coed tag link ไอดีนั้นๆ เป็นของ postId นั้นจริงมั้ย 2.ตรวจสอบว่า postId นั้นเป็นของ  uid นี้มั้ย
+      // ถ้าผ่าน ก็ลบ delete from ( post_tags  , links_in_post , code_in_post ) where (idของ post_tags  , links_in_post , code_in_post ) = targetId
+      // ลบเสร็จก็รีเฟรช
+    }
+    const handelAdd = async () =>{
+
+    }
+      if(editingField?.field == 'title'){ //   /api/posts/update/title?postid=postid ห้ามลบ ห้ามว่าง 
+        return( 
+          <div>
+            Title
+            <button>Update</button>
+          </div>
+        )
+      }
+      if(editingField?.field == 'description') { //   /api/posts/update/descritptiom?postid=postid ห้ามลบ ห้ามว่าง
+        return(
+          <div>
+            Description
+          </div>
+        )
+      }
+      if(editingField?.field == 'links') {
+       return editingField.targetId ?  
+        (
+          <div>
+              Update Link With Id  
+              <button>แก้ไข</button> // /api/posts/update/links?postid = postId && id = editingField.targetId'
+              <button>ลบ </button> /api/posts/delete/links?postid = postId && id = editingField.targetId'
+          </div>
+        )  : (
+          <div>
+            Update Link without ID  เพิ่ม link ใหม่ /api/posts/add/links?postId=postId ส่ง string link ไป
+          </div>
+        )
+      }
+      if(editingField?.field == 'tags') {
+        return( 
+          // อันนี้จะเปิดหน้าแท็กมา โดยเริ่มจากโหลดแท็กทั้งหมด จาก /api/post/getAllTag เพื่อได้ข้อมูลแท็กทั้งหมดของผู้ใช้คนนั้น 
+            //     interface Tag {
+                //   id: string;
+                //   description: string; 
+          // } โดยจะทำการเอาแท็กที่ยังไม่มีใน post.tag.id โดยหากกดเพิ่มใหม่จะส่ง ไปที่ /api/posts/add/tags?postId=postId แล้วส่งก้อนแท็กใหม่ไปซึ่งประกอบด้วย {id , descritpion}
+          // โดยผู้ใช้สามารถพิมพ์ค้นหาแท็กที่ต้องการได้ 
+          // หากแท็กที่ค้นหาไม่มี แล้วเป็นแท็กใหม่ ให้ทำการเพิ่มไปเป็นก้อนด้วย {id = '' , descirption = ที่ผู้ใช้กรอก} จากนั้นค่อยไปจัดการต่อที่ API
+          // หากผู้ใช้ทำการลบแท็กเก่า ให้กดกากบาท แล้วส่งไปที่ /api/posts/delete/tags?posy=postid && id = editingField.targetId
+
+          <div>
+            Update Tags
+          </div>
+        )
+      }
+      if(editingField?.field == 'codes') {
+      //   interface Code {
+      //     id:string 
+      //   code: string;
+      //   description: string;
+      //   language: string;
+      // }
+       return editingField.targetId ? 
+        (
+          <div>
+              Update Code With Id
+          </div>
+        )  : (
+          <div>
+            Update Code without ID
+          </div>
+        )
+      }
+  }
