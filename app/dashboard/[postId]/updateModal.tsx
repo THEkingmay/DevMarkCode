@@ -100,7 +100,7 @@ export default function UpdateFormContent({
         };
 
         return (
-            <div className="space-y-4">
+            <div className="space-y-4 ">
                 <label htmlFor="description" className="block font-medium">
                     New Description:
                 </label>
@@ -108,7 +108,7 @@ export default function UpdateFormContent({
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-2 border rounded min-h-[200px]"
+                    className="w-full  p-2 border rounded min-h-[500px] h-full"
                     disabled={isLoading}
                 />
                 <FormButtons
