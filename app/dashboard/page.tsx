@@ -164,12 +164,42 @@ export default function DashboardPage() {
       )}
 
       {!isLoading && posts.length > 0 && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div>
+          {/* desktop */}
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((p) => (
               <PostCard key={p.id} post={p} />
             ))}
           </div>
+            {/* mobile */}
+            <div className='md:hidden'>
+              {
+                posts.map((p) => (
+                  <div key={p.id} className="mb-4 border-b pb-3 ">
+                    {/* not use card on mobile just make it cleaner , Link for title to go to selcet post id , make tag name at the right */}
+                    <Link href={`/dashboard/${p.id}`}>
+                      <h3
+                        className="text-lg font-semibold text-gray-900 mb-2 truncate"
+                        title={p.title}
+                      >
+                        {p.title} 
+                      </h3>
+                    </Link>
+                    <div className="flex flex-wrap gap-1">
+                      {p.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                      ))}
+                    </div>
+                
+                  </div>
+                ))
+              }
+            </div>
 
           <div className="flex justify-between mt-5">
             <button
@@ -190,7 +220,7 @@ export default function DashboardPage() {
               Next
             </button>
           </div>
-        </>
+        </div>
       )}
 
       {!isLoading && posts.length === 0 && (

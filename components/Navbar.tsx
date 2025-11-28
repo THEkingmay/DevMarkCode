@@ -1,15 +1,20 @@
 'use client';
-import { useState } from 'react'; // 1. Import useState
+import { useState } from 'react';
 import {
   Home,
   Plus,
-  X,
   LogOut,
   Code,
-  Menu, // 2. Import Menu icon
+  Menu,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 const navigation = [
   { name: 'โพสต์ทั้งหมด', href: '/dashboard', icon: Home },
@@ -17,7 +22,7 @@ const navigation = [
 ];
 
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // 3. State สำหรับเมนูมือถือ
+  const [isOpen, setIsOpen] = useState(false);
 
   const Logo = () => (
     <Link href="/" className="flex items-center gap-2 font-bold text-lg">
@@ -27,63 +32,48 @@ export default function Navbar() {
   );
 
   return (
-    <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4 sm:px-10">
-          <Logo />
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle mobile menu"
-              className="p-2 rounded-md duration-200 text-gray-900 hover:bg-gray-200"
-            >
-              {
-                isMenuOpen ? (
-                  <X className="h-6 w-6" /> // ไอคอนปิด (X)
-                ) : (
-                  <Menu className="h-6 w-6" />
-                ) // ไอคอนเปิด (Menu)
-              }
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {isMenuOpen && (
-        <div className="md:hidden absolute top-16 left-0 right-0 z-40 bg-background border-b shadow-lg">
-          <nav className="flex flex-col p-4 space-y-2">
-            {/* Links จาก navigation array */}
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex items-center gap-3 duration-200 px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-200 "
-                onClick={() => setIsMenuOpen(false)} // ปิดเมนูเมื่อคลิก
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between px-4 sm:px-10">
+        <Logo />
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button size={'icon-lg'} variant="ghost" onClick={() => setIsOpen(true)}>
+              <Menu/>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-64">
+            <nav className="flex flex-col gap-2 mt-8 justify-between h-full">
+              <div>
+                 {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 m-1 px-3 py-2 rounded-lg text-base font-medium transition-colors hover:bg-accent"
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              ))}
+              
+              <div className="my-4 border-t" />
+              </div>
+              
+              <Button
+                variant="ghost"
+                className="justify-start mb-10 w-full mx-1"
+                onClick={() => {
+                  setIsOpen(false);
+                  signOut();
+                }}
               >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            ))}
-
-            {/* เส้นคั่น */}
-            <hr className="border-gray-700 my-2" />
-
-            {/* 6. ปุ่มออกจากระบบ (สำหรับ Mobile) */}
-            <button
-              onClick={() => {
-                setIsMenuOpen(false); // ปิดเมนูก่อน
-                signOut();
-              }}
-              className="flex items-center justify-start text-left
-                w-full px-3 py-2 rounded-lg transition-colors duration-200
-                text-gray-900  hover:bg-gray-200 "
-            >
-              <LogOut className="h-5 w-5 mr-3" />
-              ออกจากระบบ
-            </button>
-          </nav>
-        </div>
-      )}
-    </>
+                <LogOut className="h-5 w-5 mr-3" />
+                ออกจากระบบ
+              </Button>
+            </nav>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </header>
   );
 }
