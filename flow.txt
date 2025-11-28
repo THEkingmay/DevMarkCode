@@ -1,85 +1,70 @@
+===================================================
+ SYSTEM FLOW: DevMarkCode
+===================================================
 
-  function formUpdate (){
-    const [updateObject , setUpdateOBJ] = useState<{
-        postId : string | number,
-        field  : 'title' | 'description'| 'links'| 'codes'| 'tags' ,// บอกว่าจะอับเดตหรือลบฟิลด์ไหน
-       targetId : string | number | null , 
-       newData : null | string | Code | Tag // tag จะมีไอดีกับสตริง ถ้าไอดีเป็น null ไปจัดการต่อฝั่งAPI
-    }>()
-    const handleUpdate = async() =>{
-      // ถ้าแก้ไข Title Description แก้ไขได้ง่าย
-    }
-    const handleDelete  = async ()=>{
-      // ลบ title , description ไม่ได้
-      // ถ้าลบ code , tag , link ทำได้ จะมี postId ในตาราง post_tags  , links_in_post , code_in_post 
-      // 1.ตรวจสอบว่า coed tag link ไอดีนั้นๆ เป็นของ postId นั้นจริงมั้ย 2.ตรวจสอบว่า postId นั้นเป็นของ  uid นี้มั้ย
-      // ถ้าผ่าน ก็ลบ delete from ( post_tags  , links_in_post , code_in_post ) where (idของ post_tags  , links_in_post , code_in_post ) = targetId
-      // ลบเสร็จก็รีเฟรช
-    }
-    const handelAdd = async () =>{
+[1. Authentication Process (NextAuth + GitHub + Supabase)]
+---------------------------------------------------
+1. User clicks "Login with GitHub" button.
+2. NextAuth redirects User to GitHub Authorization page.
+3. User authorizes the app.
+4. GitHub redirects back to callback URL (/api/auth/callback/github).
+5. NextAuth (SignIn Callback):
+   |
+   +--> Check if User exists in Supabase (check by email or provider_account_id).
+   |
+   +-- [CASE: New User] (First time login)
+   |    1. Retrieve profile data from GitHub (Name, Email, Avatar, GitHub ID).
+   |    2. INSERT new row into 'users' table in Supabase.
+   |    3. Create session.
+   |
+   +-- [CASE: Existing User]
+        1. UPDATE user information (Avatar/Name) if changed (Optional).
+        2. Create session.
 
-    }
-      if(editingField?.field == 'title'){ //   /api/posts/update/title?postid=postid ห้ามลบ ห้ามว่าง 
-        return( 
-          <div>
-            Title
-            <button>Update</button>
-          </div>
-        )
-      }
-      if(editingField?.field == 'description') { //   /api/posts/update/descritptiom?postid=postid ห้ามลบ ห้ามว่าง
-        return(
-          <div>
-            Description
-          </div>
-        )
-      }
-      if(editingField?.field == 'links') {
-       return editingField.targetId ?  
-        (
-          <div>
-              Update Link With Id  
-              <button>แก้ไข</button> // /api/posts/update/links?postid = postId && id = editingField.targetId'
-              <button>ลบ </button> /api/posts/delete/links?postid = postId && id = editingField.targetId'
-          </div>
-        )  : (
-          <div>
-            Update Link without ID  เพิ่ม link ใหม่ /api/posts/add/links?postId=postId ส่ง string link ไป
-          </div>
-        )
-      }
-      if(editingField?.field == 'tags') {
-        return( 
-          // อันนี้จะเปิดหน้าแท็กมา โดยเริ่มจากโหลดแท็กทั้งหมด จาก /api/post/getAllTag เพื่อได้ข้อมูลแท็กทั้งหมดของผู้ใช้คนนั้น 
-            //     interface Tag {
-                //   id: string;
-                //   description: string; 
-          // } โดยจะทำการเอาแท็กที่ยังไม่มีใน post.tag.id โดยหากกดเพิ่มใหม่จะส่ง ไปที่ /api/posts/add/tags?postId=postId แล้วส่งก้อนแท็กใหม่ไปซึ่งประกอบด้วย {id , descritpion}
-          // โดยผู้ใช้สามารถพิมพ์ค้นหาแท็กที่ต้องการได้ 
-          // หากแท็กที่ค้นหาไม่มี แล้วเป็นแท็กใหม่ ให้ทำการเพิ่มไปเป็นก้อนด้วย {id = '' , descirption = ที่ผู้ใช้กรอก} จากนั้นค่อยไปจัดการต่อที่ API
-          // หากผู้ใช้ทำการลบแท็กเก่า ให้กดกากบาท แล้วส่งไปที่ /api/posts/delete/tags?posy=postid && id = editingField.targetId
+[2. Create Post (Adding Knowledge/Snippets)]
+---------------------------------------------------
+1. User clicks "Create New Post".
+2. User inputs:
+   - Title
+   - Content / Code Snippet
+   - Link (Optional)
+   - Tags (e.g., "React", "Bug", "Tutorial")
+3. System validates input.
+4. Database Transaction:
+   |
+   +--> 1. INSERT post data into 'posts' table (linked to current user_id).
+   |
+   +--> 2. Process Tags:
+           For each tag in input:
+           - Check if tag exists in 'tags' table.
+           - If NO: INSERT new tag into 'tags' table.
+           - If YES: Get existing tag_id.
+           - INSERT pair (post_id, tag_id) into 'post_tags' junction table.
+5. Return success & Redirect to Dashboard.
 
-          <div>
-            Update Tags
-          </div>
-        )
-      }
-      if(editingField?.field == 'codes') {
-      //   interface Code {
-      //     id:string 
-      //   code: string;
-      //   description: string;
-      //   language: string;
-      // }
-       return editingField.targetId ? 
-        (
-          <div>
-              Update Code With Id
-          </div>
-        )  : (
-          <div>
-            Update Code without ID
-          </div>
-        )
-      }
-  }
+[3. Read / Dashboard]
+---------------------------------------------------
+1. Fetch posts from 'posts' table WHERE user_id = current_session_user.
+2. Join with 'tags' to display badges.
+3. Display list of cards (Title, Tags, Created_at).
+
+[4. Edit Post]
+---------------------------------------------------
+1. User clicks "Edit" on a post.
+2. System checks ownership (post.user_id == session.user.id).
+3. Load existing data into form.
+4. User modifies content/tags and saves.
+5. Database Update:
+   - UPDATE 'posts' table columns.
+   - DELETE old relations in 'post_tags' for this post.
+   - Re-INSERT new tag relations (same logic as Create Post).
+
+[5. Delete Post]
+---------------------------------------------------
+1. User clicks "Delete".
+2. System checks ownership.
+3. Database Delete:
+   - DELETE row from 'posts' WHERE id = post_id.
+   - (Cascade delete will automatically remove related 'post_tags').
+4. Refresh UI.
+
