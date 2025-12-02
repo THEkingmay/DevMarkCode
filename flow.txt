@@ -1,5 +1,5 @@
 ===================================================
- SYSTEM FLOW: DevMarkCode
+ SYSTEM FLOW: DevMarkCode ..
 ===================================================
 
 [1. Authentication Process (NextAuth + GitHub + Supabase)]
