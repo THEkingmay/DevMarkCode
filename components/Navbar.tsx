@@ -27,7 +27,7 @@ export default function Navbar() {
   const Logo = () => (
     <Link href="/" className="flex items-center gap-2 font-bold text-lg">
       <Code className="h-6 w-6 text-primary" />
-      <span className="hidden sm:inline-block">DevMarkCode</span>
+      <span >DevMarkCode</span>
     </Link>
   );
 

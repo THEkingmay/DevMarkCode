@@ -123,7 +123,16 @@ export default function SelectPost() {
   if (!post.post_id) {
     return (
       <div className="flex justify-center items-center min-h-screen text-2xl">
-       {!fetchError &&  <p>Loading post...</p>}
+       {!fetchError && 
+       <div className='flex-col items-center justify-center '>
+        <div className="flex space-x-2 mb-4">
+          <div className="w-4 h-4 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-4 h-4 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-4 h-4 bg-indigo-600 rounded-full animate-bounce"></div>
+        </div>
+        <p className="text-gray-500 font-medium animate-pulse">กำลังโหลด...</p>
+       </div>
+       }
        {fetchError &&  (
         <div>
           เกิดข้อผิดพลาด

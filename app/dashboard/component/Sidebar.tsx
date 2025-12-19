@@ -37,7 +37,7 @@ export default function Sidebar() {
     <>
       <aside
         className={`
-          hidden md:flex
+          hidden lg:flex
           fixed inset-y-0 left-0 z-30 w-56 bg-gray-800 text-white
           flex flex-col p-4 transform transition-transform duration-300 ease-in-out
           md:static md:inset-auto md:translate-x-0
