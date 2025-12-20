@@ -52,7 +52,7 @@ const FormTextArea = ({ label, ...props }: FormTextAreaProps) => (
     </label>
     <textarea
       {...props}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+      className="w-full px-3 py-2 border h-[455px] border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
     />
   </div>
 );
@@ -251,7 +251,7 @@ const popularLanguages = [
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="p-4 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 dark:text-white">
         สร้างโพสต์ใหม่
       </h1>
