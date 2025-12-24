@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import type { Code, PostForm, Tag } from '@/util/type/type';
 import {
@@ -82,6 +83,8 @@ const popularLanguages = [
   { value: 'markdown', label: 'Markdown' },
   { value: 'yaml', label: 'YAML' },
 ];
+    
+  const router =  useRouter()
 
   const [selectableTags, setTags] = useState<Tag[]>([]);
   const [loadTags, setLoadTags] = useState<boolean>(true);
@@ -236,12 +239,16 @@ const popularLanguages = [
         body: JSON.stringify(formPost),
       });
 
+      const data = await res.json()
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'เกิดข้อผิดพลาดในการเพิ่ม');
+        throw new Error(data.message || 'เกิดข้อผิดพลาดในการเพิ่ม');
       }
       toast.success('เพิ่มโพสต์ใหม่สำเร็จ');
       resetForm();
+      // console.log('data new post ' , data)
+      router.push(`/dashboard/${data.post_id}`)
+
     } catch (err) {
       console.log((err as Error).message);
       toast.error((err as Error).message);
