@@ -53,6 +53,7 @@ interface PostStructure{
   title : string , 
   description : string , 
   created_at : string ,
+  is_shared? : boolean ,
   tags : TagStructure[] , // [ {id , description  , creacted_at} ,...]
   links : Link[] ,  // [ { id , link } , ...]
   codes : CodeStructure[] , // [ { id , code , descriton , language , description }, .. ]

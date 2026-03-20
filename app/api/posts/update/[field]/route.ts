@@ -19,7 +19,9 @@ interface UpdateCodeBody {
   code: string;
   language: string;
 }
-
+interface UpdateIsShredBody {
+  is_shared : boolean
+}
 // ใช้ Signature มาตรฐานของ App Router
  
 export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/update/[field]'>) {
@@ -163,6 +165,23 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/posts/update
         updateError = error;
         break;
       }
+
+        case 'is_shared' : {  
+          const { is_shared } = body as UpdateIsShredBody;
+          if (is_shared === null || is_shared === undefined) {
+            return Response.json(
+              { message: 'Invalid is_shared data' },
+              { status: 400 },
+            );
+          }
+          const { error } = await supabase
+            .from('posts')
+            .update({ is_shared: is_shared })
+            .eq('id', postId)
+            .eq('uid', uid);
+          updateError = error;
+          break;
+        }
 
       // --- กรณี Field ไม่ถูกต้อง ---
       // (เราไม่มี case 'tags' เพราะ Logic การจัดการ Tag ของเราคือ Add/Delete เท่านั้น)

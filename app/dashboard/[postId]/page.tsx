@@ -31,6 +31,7 @@ export default function SelectPost() {
     links: [],
     codes: [],
     created_at: '',
+    is_shared: false,
   });
   const { postId } = useParams<{ postId: string }>();
 
@@ -51,6 +52,7 @@ export default function SelectPost() {
       if (!res.ok) throw new Error('ไม่สามารถดึงข้อมูลโพสต์ได้');
       const resData = await res.json();
       const data: PostStructure = resData.data;
+      console.log('Fetched Post Data:', data); // (เพิ่ม Log เพื่อตรวจสอบข้อมูลที่ได้)
       setPost(data);
     } catch (err) {
       console.log((err as Error).message);
@@ -143,21 +145,108 @@ export default function SelectPost() {
     );
   }
 
+  const handleShareButtonClick = async () => {
+    // update is_shared ใน database ก่อน
+    try {
+      // ถ้าแชร์อยู่แล้ว, ไม่ต้องอัปเดตซ้ำ
+      if (post.is_shared) {
+        const shareUrl = `${window.location.origin}/share/${post.post_id}`;
+        navigator.clipboard.writeText(shareUrl);
+        toast.success('ลิงก์แชร์ถูกคัดลอกแล้ว!');
+        return;
+      }
+
+      const res = await fetch(`/api/posts/update/is_shared?postId=${post.post_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_shared:true}),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'ไม่สามารถอัปเดตสถานะการแชร์ได้');
+      }
+      setPost(prev => ({ ...prev, is_shared: true })); // อัปเดตสถานะใน UI ทันที
+
+      // ถ้าอัปเดตสำเร็จ, คัดลอก URL ไปยังคลิปบอร์ด
+      const shareUrl = `${window.location.origin}/share/${post.post_id}`;
+      navigator.clipboard.writeText(shareUrl);
+      toast.success('ลิงก์แชร์ถูกคัดลอกแล้ว!');
+    } catch (err) {
+      console.error((err as Error).message);
+      toast.error((err as Error).message);
+    }
+  }
+    
+  const cancleShare = async () => {
+    try {
+      const res = await fetch(`/api/posts/update/is_shared?postId=${post.post_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_shared: false }), // ตั้งเป็นไม่แชร์
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'ไม่สามารถยกเลิกการแชร์ได้');
+      }
+      setPost(prev => ({ ...prev, is_shared: false })); // อัปเดตสถานะใน UI ทันที
+      toast.success('ยกเลิกการแชร์เรียบร้อยแล้ว!');
+    } catch (err) {
+      console.error((err as Error).message);
+      toast.error((err as Error).message);
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
       {/* === 1. ส่วนหัวเรื่อง (Title) === */}
       <section>
         <div className="flex justify-between items-start gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl md:text-4xl font-bold break-words">
-              {post.title}
-            </h1>
+             <div className='flex items-center gap-2'>
+              <h1 className="text-3xl md:text-4xl font-bold break-words">
+                {post.title}
+              </h1>
+              <button
+                onClick={() => openModal('title'  , null)}
+                className="text-gray-500 hover:text-blue-600 transition-colors"
+              >
+                <PencilSquareIcon className="w-6 h-6" />
+              </button>
+           </div>
+           {/* ปุ่มแชร์ */}
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => openModal('title'  , null)}
-              className="text-gray-500 hover:text-blue-600 transition-colors"
+              onClick={handleShareButtonClick}
+              aria-pressed={post.is_shared}
+              className={`py-2 px-4 rounded-md text-white transition-colors ${
+                post.is_shared
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
             >
-              <PencilSquareIcon className="w-6 h-6" />
+              {post.is_shared ? 'คัดลอกลิงก์แชร์' : 'แชร์โพสต์'}
             </button>
+
+            <span
+              className={`text-xs px-2 py-1 rounded-full ${
+                post.is_shared
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {post.is_shared ? 'กำลังแชร์' : 'ยังไม่แชร์'}
+            </span>
+            {post.is_shared && (
+              <button
+                onClick={cancleShare}
+                className="text-gray-500 hover:text-red-600 transition-colors"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </button>
+            )}
+          </div>
           </div>
         </div>
         <p className="text-sm text-gray-500 mt-2">

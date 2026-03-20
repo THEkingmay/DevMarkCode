@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const { data, error } = await supabase.rpc('get_post_for_owner', {
+    const { data, error } = await supabase.rpc('get_post_by_id', {
       p_post_id: post_id,
       p_uid: uid,
     });
